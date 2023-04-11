@@ -34,7 +34,7 @@ async function saveInstancesCsv(instances: Instance[]): Promise<void> {
         projectId: process.env.PROJECT_ID
     });
 
-    // Create the bucket if it doesn't exist
+    // Try creating the bucket and if it already exists, get it
     let bucket;
     try {
         const [createdBucket, _] = await storage.createBucket(process.env.REPORTS_BUCKET!);
@@ -50,6 +50,7 @@ async function saveInstancesCsv(instances: Instance[]): Promise<void> {
     const header = 'name,status';
     const instancesCsv = instances.map(instance => `${instance.name},${instance.status}`).join('\n');
 
+    // Save the file
     await file.save(`${header}\n${instancesCsv}`);
 }
 
@@ -61,23 +62,29 @@ async function saveInstancesCsv(instances: Instance[]): Promise<void> {
  * @see https://cloud.google.com/compute/docs/reference/rest/v1/instances/list#query-parameters
  */
 async function getInstances(): Promise<Instance[]> {
+    // Create the request
     const request: google.cloud.compute.v1.IListInstancesRequest = {
         project: process.env.PROJECT_ID,
         zone: process.env.ZONE,
         filter: 'status=RUNNING', // Only get instances with the RUNNING status. You can filter like this: https://cloud.google.com/compute/docs/reference/rest/v1/instances/list#query-parameters
     };
 
+    // Create the compute instances client
     const instancesClient = new InstancesClient({
         projectId: process.env.PROJECT_ID,
     });
 
+    // Get the instances
     const iterable = instancesClient.listAsync(request);
 
+    // Create the array of instances
     const instancesArray = [];
 
+    // Iterate over the instances and add them to the array
     for await (const instance of iterable) {
         instancesArray.push({ name: instance.name, status: instance.status });
     }
+
     return instancesArray;
 }
 
