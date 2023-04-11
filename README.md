@@ -42,10 +42,6 @@
 
 > TBD
 
-## Appendix
-
-Coloque qualquer informação adicional aqui
-
 
 ## Stack
 
